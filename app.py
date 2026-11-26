@@ -125,24 +125,25 @@ def pode_clicar():
 # ---------------------------------------------------------------- som de campainha (sintetizado, sem arquivo)
 @st.cache_resource
 def campainha_wav():
-    """'Ding' unico e alto de campainha de balcao de hotel, gerado em Python (WAV 16 bits)."""
-    sr = 22050
-    dur = 2.4
+    """Toque unico, forte e longo de campainha de balcao de hotel, gerado em Python (WAV 16 bits, volume maximo)."""
+    sr = 44100
+    dur = 3.8
     n = int(sr * dur)
-    # parciais de sino (razoes inarmonicas) com decaimento exponencial
-    parciais = [(1.0, 1.0, 3.0), (2.76, 0.55, 4.5), (5.40, 0.30, 6.5), (8.93, 0.12, 9.0)]
-    f0 = 1568.0  # sol 6
-    quadros = bytearray()
+    f0 = 1760.0
+    # (razao, amplitude, decaimento): parciais de sino, o grave dura mais
+    parciais = [(1.0, 1.0, 1.4), (2.0, 0.6, 2.0), (2.76, 0.7, 2.5), (4.07, 0.4, 3.2), (5.40, 0.35, 4.2), (8.93, 0.15, 7.0)]
+    bruto = []
     for i in range(n):
         t = i / sr
         v = 0.0
-        for inicio in (0.0,):  # um toque so
-            if t >= inicio:
-                tt = t - inicio
-                for r, amp, dec in parciais:
-                    v += amp * math.exp(-dec * tt) * math.sin(2 * math.pi * f0 * r * tt)
-        v = max(-1.0, min(1.0, v * 0.95))
-        quadros += struct.pack("<h", int(v * 32767))
+        for r, amp, dec in parciais:
+            v += amp * math.exp(-dec * t) * math.sin(2 * math.pi * f0 * r * t)
+        v *= min(1.0, t / 0.002)  # ataque de 2 ms (sem estalo)
+        bruto.append(math.tanh(2.4 * v) / math.tanh(2.4))  # compressao: soa bem mais forte
+    pico = max(abs(x) for x in bruto) or 1.0
+    quadros = bytearray()
+    for x in bruto:
+        quadros += struct.pack("<h", int(x / pico * 0.98 * 32767))
     buf = io.BytesIO()
     with wave.open(buf, "wb") as w:
         w.setnchannels(1)
@@ -196,6 +197,10 @@ st.markdown(
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap');
 #MainMenu, header, footer {{visibility:hidden;}}
+html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main, .main {{
+  scrollbar-width:none !important; -ms-overflow-style:none !important;}}
+html::-webkit-scrollbar, body::-webkit-scrollbar, .stApp::-webkit-scrollbar, *::-webkit-scrollbar {{display:none !important; width:0 !important; height:0 !important;}}
+.block-container {{padding-top:1rem !important; padding-bottom:1rem !important;}}
 .stApp {{background:{AZUL}; font-family:'Montserrat','Gotham',sans-serif;}}
 .bloco {{text-align:center; padding-top:7vh; color:#fff; font-family:'Montserrat','Gotham',sans-serif;}}
 .wordmark {{font-size:3.6rem; font-weight:800; letter-spacing:-2px; color:#fff; line-height:1;}}
