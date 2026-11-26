@@ -210,9 +210,11 @@ st.markdown(
 html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"], section.main, .main {{
   scrollbar-width:none !important; -ms-overflow-style:none !important;}}
 html::-webkit-scrollbar, body::-webkit-scrollbar, .stApp::-webkit-scrollbar, *::-webkit-scrollbar {{display:none !important; width:0 !important; height:0 !important;}}
-.block-container {{padding-top:1rem !important; padding-bottom:1rem !important;}}
+.block-container {{padding-top:1rem !important; padding-bottom:3.4rem !important; min-height:100vh;
+  display:flex !important; flex-direction:column; justify-content:center;}}
+.block-container > div[data-testid="stVerticalBlock"] {{flex:1 1 auto; justify-content:center;}}
 .stApp {{background:{AZUL}; font-family:'Montserrat','Gotham',sans-serif;}}
-.bloco {{text-align:center; padding-top:7vh; color:#fff; font-family:'Montserrat','Gotham',sans-serif;}}
+.bloco {{text-align:center; padding-top:0; color:#fff; font-family:'Montserrat','Gotham',sans-serif;}}
 .wordmark {{font-size:3.6rem; font-weight:800; letter-spacing:-2px; color:#fff; line-height:1;}}
 .wordmark .dp {{color:{LARANJA}; margin:0 2px;}}
 .slogan {{font-size:.8rem; letter-spacing:1px; margin-top:4px; opacity:.9;}}
