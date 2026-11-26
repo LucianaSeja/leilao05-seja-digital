@@ -7,8 +7,12 @@ Opcional (deixar VAZIO no app publico): [acesso] diretores = ["email1", "email2"
 os demais so acompanham. Lista vazia/ausente = quem entrou pode clicar."""
 import base64
 import datetime as dt
+import io
 import json
+import math
+import struct
 import threading
+import wave
 import time
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -118,6 +122,40 @@ def pode_clicar():
     return (not lista) or (_email_viewer() in lista)
 
 
+# ---------------------------------------------------------------- som de campainha (sintetizado, sem arquivo)
+@st.cache_resource
+def campainha_wav():
+    """'Ding' unico e alto de campainha de balcao de hotel, gerado em Python (WAV 16 bits)."""
+    sr = 22050
+    dur = 2.4
+    n = int(sr * dur)
+    # parciais de sino (razoes inarmonicas) com decaimento exponencial
+    parciais = [(1.0, 1.0, 3.0), (2.76, 0.55, 4.5), (5.40, 0.30, 6.5), (8.93, 0.12, 9.0)]
+    f0 = 1568.0  # sol 6
+    quadros = bytearray()
+    for i in range(n):
+        t = i / sr
+        v = 0.0
+        for inicio in (0.0,):  # um toque so
+            if t >= inicio:
+                tt = t - inicio
+                for r, amp, dec in parciais:
+                    v += amp * math.exp(-dec * tt) * math.sin(2 * math.pi * f0 * r * tt)
+        v = max(-1.0, min(1.0, v * 0.95))
+        quadros += struct.pack("<h", int(v * 32767))
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(sr)
+        w.writeframes(bytes(quadros))
+    return buf.getvalue()
+
+
+def tocar_campainha():
+    st.audio(campainha_wav(), format="audio/wav", autoplay=True)
+
+
 # ---------------------------------------------------------------- visual
 def logo_html():
     if LOGO.exists():
@@ -125,6 +163,24 @@ def logo_html():
         return f'<img src="data:image/png;base64,{b64}" class="logo-img">'
     return ('<div class="wordmark">Seja<span class="dp">:</span>Digital</div>'
             '<div class="slogan">tudo está conectado</div>')
+
+
+def _logo_inst(nome, arquivo):
+    p = AQUI / arquivo
+    if p.exists():
+        b64 = base64.b64encode(p.read_bytes()).decode()
+        return f'<img src="data:image/png;base64,{b64}" alt="{nome}" class="logo-inst">'
+    return f'<span class="txt-inst">{nome}</span>'
+
+
+def rodape_html():
+    return (
+        '<div class="inst">'
+        + _logo_inst("Ministério das Comunicações", "logo_mcom.png")
+        + _logo_inst("Anatel", "logo_anatel.png")
+        + '<span class="txt-inst gired">GIRED</span>'
+        + "</div>"
+    )
 
 
 GAVEL = (
@@ -167,6 +223,13 @@ div.stButton > button {{
 }}
 div.stButton > button:hover {{background:#fff; color:{AZUL}; border-color:#fff;}}
 a.lk {{color:#fff; opacity:.8; font-size:.95rem;}}
+.inst {{display:inline-flex; align-items:center; justify-content:center; gap:28px; flex-wrap:wrap;
+  background:#fff; border-radius:10px; padding:12px 28px; margin-top:38px;}}
+.logo-inst {{max-height:46px; max-width:200px;}}
+.txt-inst {{color:{AZUL}; font-weight:800; letter-spacing:1px; font-size:1rem;}}
+.txt-inst.gired {{font-size:1.25rem; letter-spacing:3px;}}
+div[data-testid="stAudio"] {{height:0; overflow:hidden; opacity:0; margin:0; padding:0;}}
+.dica-som {{opacity:.45; font-size:.78rem; margin-top:22px;}}
 .st-key-reset button, .st-key-recarregar button {{
   background:transparent !important; border:none !important; color:#fff !important; opacity:.28;
   font-size:1.5rem; font-weight:400; padding:2px 14px; letter-spacing:0; margin-top:28px;
@@ -202,9 +265,11 @@ def tela():
             <div class="filete"></div>
             <div class="edicao">{TITULO}</div>
             <div class="sub">{DATA_LEILAO} · aguardando o início</div>
-            {GAVEL}</div>""",
+            {GAVEL}<br>{rodape_html()}
+            <div class="dica-som">🔔 Para ouvir a campainha nesta tela, clique uma vez em qualquer lugar dela.</div></div>""",
             unsafe_allow_html=True,
         )
+        st.session_state["_vi_aguardando"] = True
         if clicar and st.button("INICIAR LEILÃO", key="btn_iniciar"):
             gravar_estado({"iniciado": True, "quando": dt.datetime.now(TZ).isoformat()})
             st.rerun()
@@ -218,9 +283,15 @@ def tela():
             <div class="aovivo"><span class="ponto"></span>EM ANDAMENTO</div>
             <div class="hora">Início: {quando} (horário de Brasília)</div>
             <div class="sub" style="margin-top:30px">
-              <a class="lk" href="{LINK}" target="_blank">sejadigital.com.br/leilao05</a></div></div>""",
+              <a class="lk" href="{LINK}" target="_blank">sejadigital.com.br/leilao05</a></div>
+            {rodape_html()}</div>""",
             unsafe_allow_html=True,
         )
+        if st.session_state.get("_vi_aguardando"):  # so toca quando ESTA tela viu a virada (nao ao recarregar)
+            st.session_state["_vi_aguardando"] = False
+            st.session_state["_sino_ate"] = time.time() + 5
+        if time.time() < st.session_state.get("_sino_ate", 0):  # mantem o <audio> na tela ate o som acabar
+            tocar_campainha()
         if clicar:
             if st.session_state.get("_conf_reset"):
                 st.markdown('<div class="sub" style="margin-top:24px;text-align:center">Voltar para antes do leilão?</div>',
