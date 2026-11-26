@@ -236,8 +236,9 @@ a.lk {{color:#fff; opacity:.8; font-size:.95rem;}}
 .seja-azul .dp {{color:{LARANJA};}}
 .gired-leg {{margin:12px auto 0; max-width:820px; font-size:.72rem; line-height:1.45; opacity:.85; letter-spacing:.2px;}}
 .gired-leg b {{letter-spacing:2px; font-size:.8rem;}}
-div[data-testid="stAudio"] {{height:0; overflow:hidden; opacity:0; margin:0; padding:0;}}
-.dica-som {{opacity:.45; font-size:.78rem; margin-top:22px;}}
+div[data-testid="stAudio"], div[data-testid="stElementContainer"]:has(audio), audio {{
+  position:absolute !important; width:1px !important; height:1px !important; opacity:0 !important;
+  overflow:hidden !important; margin:0 !important; padding:0 !important; pointer-events:none !important;}}
 .st-key-reset button, .st-key-recarregar button {{
   background:transparent !important; border:none !important; color:#fff !important; opacity:.28;
   font-size:1.5rem; font-weight:400; padding:2px 14px; letter-spacing:0; margin-top:28px;
@@ -273,14 +274,14 @@ def tela():
             <div class="filete"></div>
             <div class="edicao">{TITULO}</div>
             <div class="sub">{DATA_LEILAO} · aguardando o início</div>
-            {GAVEL}<br>{rodape_html()}
-            <div class="dica-som">🔔 Para ouvir a campainha nesta tela, clique uma vez em qualquer lugar dela.</div></div>""",
+            {GAVEL}</div>""",
             unsafe_allow_html=True,
         )
         st.session_state["_vi_aguardando"] = True
         if clicar and st.button("INICIAR LEILÃO", key="btn_iniciar"):
             gravar_estado({"iniciado": True, "quando": dt.datetime.now(TZ).isoformat()})
             st.rerun()
+        st.markdown(f'<div class="bloco" style="padding-top:0">{rodape_html()}</div>', unsafe_allow_html=True)
     else:
         quando = dt.datetime.fromisoformat(estado["quando"]).strftime("%d/%m/%Y às %H:%M:%S")
         st.markdown(
