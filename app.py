@@ -174,12 +174,10 @@ def _logo_inst(nome, arquivo):
 
 
 def rodape_html():
-    """Faixa branca: MCom | Seja Digital | Anatel, todos na mesma caixa (mesmo tamanho); GIRED logo abaixo."""
-    seja = ('<div class="caixa-inst"><span class="seja-azul">Seja<span class="dp">:</span>Digital</span></div>')
+    """Faixa branca: MCom | Anatel, na mesma caixa (mesmo tamanho); GIRED logo abaixo."""
     return (
         '<div class="inst">'
         + _logo_inst("Ministério das Comunicações", "logo_mcom.png")
-        + seja
         + _logo_inst("Anatel", "logo_anatel.png")
         + "</div>"
         + ('<div class="gired-leg"><b>GIRED</b> · Grupo de Implantação do Processo de Redistribuição e '
