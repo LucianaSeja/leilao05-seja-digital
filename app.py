@@ -10,6 +10,7 @@ import datetime as dt
 import io
 import json
 import math
+import random
 import struct
 import threading
 import wave
@@ -125,25 +126,28 @@ def pode_clicar():
 # ---------------------------------------------------------------- som de campainha (sintetizado, sem arquivo)
 @st.cache_resource
 def campainha_wav():
-    """Toque unico, forte e longo de campainha de balcao de hotel, gerado em Python (WAV 16 bits, volume maximo)."""
+    """Sino de mesa: toque unico, limpo, longo e MUITO alto, gerado em Python (WAV 16 bits)."""
     sr = 44100
-    dur = 3.8
+    dur = 3.4
     n = int(sr * dur)
-    f0 = 1760.0
-    # (razao, amplitude, decaimento): parciais de sino, o grave dura mais
-    parciais = [(1.0, 1.0, 1.4), (2.0, 0.6, 2.0), (2.76, 0.7, 2.5), (4.07, 0.4, 3.2), (5.40, 0.35, 4.2), (8.93, 0.15, 7.0)]
+    f0 = 2349.0
+    # (razao, amplitude, decaimento): duas notas quase iguais (1.0 e 1.004) dao o tremulo do sino de mesa
+    parciais = [(1.0, 1.0, 1.5), (1.004, 0.9, 1.6), (2.0, 0.25, 3.0), (3.0, 0.12, 4.5)]
+    rnd = random.Random(7)
     bruto = []
     for i in range(n):
         t = i / sr
         v = 0.0
         for r, amp, dec in parciais:
             v += amp * math.exp(-dec * t) * math.sin(2 * math.pi * f0 * r * t)
-        v *= min(1.0, t / 0.002)  # ataque de 2 ms (sem estalo)
-        bruto.append(math.tanh(2.4 * v) / math.tanh(2.4))  # compressao: soa bem mais forte
+        if t < 0.004:  # estalo metalico do impacto
+            v += 0.3 * (rnd.random() * 2 - 1) * (1 - t / 0.004)
+        v *= min(1.0, t / 0.0015)
+        bruto.append(math.tanh(3.4 * v) / math.tanh(3.4))  # compressao forte: soa muito mais alto
     pico = max(abs(x) for x in bruto) or 1.0
     quadros = bytearray()
     for x in bruto:
-        quadros += struct.pack("<h", int(x / pico * 0.98 * 32767))
+        quadros += struct.pack("<h", int(x / pico * 0.99 * 32767))
     buf = io.BytesIO()
     with wave.open(buf, "wb") as w:
         w.setnchannels(1)
@@ -186,6 +190,12 @@ def rodape_html():
     )
 
 
+RELOGIO = (
+    '<svg class="relogio" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+    'stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/>'
+    '<path class="ponteiro" d="M12 12V6.5"/><path d="M12 12l3.5 2"/></svg>'
+)
+
 GAVEL = (
     '<svg class="gavel" viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="4" '
     'stroke-linecap="round" stroke-linejoin="round"><rect x="24" y="4" width="30" height="18" rx="4" '
@@ -209,6 +219,9 @@ html::-webkit-scrollbar, body::-webkit-scrollbar, .stApp::-webkit-scrollbar, *::
 .logo-img {{max-height:100px;}}
 .filete {{width:90px; height:4px; background:{LARANJA}; margin:34px auto 30px; border-radius:2px;}}
 .edicao {{font-size:1.7rem; font-weight:600; line-height:1.3; margin:0 0 8px;}}
+.relogio {{width:1.15em; height:1.15em; vertical-align:-0.22em; margin-left:6px;}}
+.relogio .ponteiro {{transform-origin:12px 12px; transform-box:view-box; animation: gira 8s linear infinite;}}
+@keyframes gira {{to {{transform:rotate(360deg);}}}}
 .sub {{opacity:.85; font-size:1rem; font-weight:400;}}
 .gavel {{width:56px; height:56px; color:#fff; opacity:.9; margin:34px 0 8px;}}
 .iniciado {{font-size:3.6rem; font-weight:800; letter-spacing:3px; color:#fff; margin:26px 0 0;
@@ -276,7 +289,7 @@ def tela():
             f"""<div class="bloco">{logo_html()}
             <div class="filete"></div>
             <div class="edicao">{TITULO}</div>
-            <div class="sub">{DATA_LEILAO} · aguardando o início</div>
+            <div class="sub">{DATA_LEILAO} · aguardando o início {RELOGIO}</div>
             {GAVEL}</div>""",
             unsafe_allow_html=True,
         )
