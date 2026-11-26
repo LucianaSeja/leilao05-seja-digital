@@ -169,17 +169,20 @@ def _logo_inst(nome, arquivo):
     p = AQUI / arquivo
     if p.exists():
         b64 = base64.b64encode(p.read_bytes()).decode()
-        return f'<img src="data:image/png;base64,{b64}" alt="{nome}" class="logo-inst">'
-    return f'<span class="txt-inst">{nome}</span>'
+        return f'<div class="caixa-inst"><img src="data:image/png;base64,{b64}" alt="{nome}"></div>'
+    return f'<div class="caixa-inst"><span class="txt-inst">{nome}</span></div>'
 
 
 def rodape_html():
+    """Faixa branca: MCom | Seja Digital | Anatel, todos na mesma caixa (mesmo tamanho); GIRED logo abaixo."""
+    seja = ('<div class="caixa-inst"><span class="seja-azul">Seja<span class="dp">:</span>Digital</span></div>')
     return (
         '<div class="inst">'
         + _logo_inst("Ministério das Comunicações", "logo_mcom.png")
+        + seja
         + _logo_inst("Anatel", "logo_anatel.png")
-        + '<span class="txt-inst gired">GIRED</span>'
         + "</div>"
+        + '<div class="gired-leg">GIRED</div>'
     )
 
 
@@ -223,11 +226,14 @@ div.stButton > button {{
 }}
 div.stButton > button:hover {{background:#fff; color:{AZUL}; border-color:#fff;}}
 a.lk {{color:#fff; opacity:.8; font-size:.95rem;}}
-.inst {{display:inline-flex; align-items:center; justify-content:center; gap:28px; flex-wrap:wrap;
-  background:#fff; border-radius:10px; padding:12px 28px; margin-top:38px;}}
-.logo-inst {{max-height:46px; max-width:200px;}}
-.txt-inst {{color:{AZUL}; font-weight:800; letter-spacing:1px; font-size:1rem;}}
-.txt-inst.gired {{font-size:1.25rem; letter-spacing:3px;}}
+.inst {{display:inline-flex; align-items:center; justify-content:center; gap:34px; flex-wrap:wrap;
+  background:#fff; border-radius:10px; padding:14px 30px; margin-top:38px;}}
+.caixa-inst {{width:190px; height:56px; display:flex; align-items:center; justify-content:center;}}
+.caixa-inst img {{max-width:100%; max-height:100%; object-fit:contain;}}
+.txt-inst {{color:{AZUL}; font-weight:800; font-size:.95rem; text-align:center;}}
+.seja-azul {{color:{AZUL}; font-weight:800; font-size:1.9rem; letter-spacing:-1px; line-height:1;}}
+.seja-azul .dp {{color:{LARANJA};}}
+.gired-leg {{margin-top:12px; font-weight:800; letter-spacing:4px; font-size:.95rem; opacity:.9;}}
 div[data-testid="stAudio"] {{height:0; overflow:hidden; opacity:0; margin:0; padding:0;}}
 .dica-som {{opacity:.45; font-size:.78rem; margin-top:22px;}}
 .st-key-reset button, .st-key-recarregar button {{
