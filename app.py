@@ -181,7 +181,7 @@ def rodape_html():
         + _logo_inst("Anatel", "logo_anatel.png")
         + "</div>"
         + ('<div class="gired-leg"><b>GIRED</b> · Grupo de Implantação do Processo de Redistribuição e '
-           'Digitalização de Canais de TV e RTV<br>Subordinado ao Conselho Diretor da Anatel</div>')
+           'Digitalização de Canais de TV e RTV</div>')
     )
 
 
@@ -232,7 +232,7 @@ a.lk {{color:#fff; opacity:.8; font-size:.95rem;}}
 .txt-inst {{color:{AZUL}; font-weight:800; font-size:.95rem; text-align:center;}}
 .seja-azul {{color:{AZUL}; font-weight:800; font-size:1.9rem; letter-spacing:-1px; line-height:1;}}
 .seja-azul .dp {{color:{LARANJA};}}
-.gired-leg {{margin:12px auto 0; max-width:820px; font-size:.72rem; line-height:1.45; opacity:.85; letter-spacing:.2px;}}
+.gired-leg {{margin:12px auto 0; max-width:760px; font-size:.72rem; line-height:1.45; opacity:.85; letter-spacing:.2px;}}
 .gired-leg b {{letter-spacing:2px; font-size:.8rem;}}
 div[data-testid="stAudio"], div[data-testid="stElementContainer"]:has(audio), audio {{
   position:absolute !important; width:1px !important; height:1px !important; opacity:0 !important;
